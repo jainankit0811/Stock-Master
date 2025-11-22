@@ -14,6 +14,7 @@ const transferRoutes = require('./routes/transfer.routes');
 const adjustmentRoutes = require('./routes/adjustment.routes');
 const ledgerRoutes = require('./routes/ledger.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const stockAlertRoutes = require('./routes/stockAlert.routes'); // Import stock alert routes
 
 // Connect to MongoDB
 connectDB();
@@ -49,6 +50,7 @@ app.use('/api/transfers', transferRoutes);
 app.use('/api/adjustments', adjustmentRoutes);
 app.use('/api/ledger', ledgerRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/stock-alerts', stockAlertRoutes); // Use stock alert routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -3,6 +3,7 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../api
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
 import TextInput from '../components/form/TextInput';
+import NumberInput from '../components/form/NumberInput'; // Import NumberInput
 import toast from 'react-hot-toast';
 
 const Products = () => {
@@ -10,7 +11,7 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [formData, setFormData] = useState({ name: '', sku: '', category: '', unit: 'pcs' });
+  const [formData, setFormData] = useState({ name: '', sku: '', category: '', unit: 'pcs', minStockLevel: 0 }); // Initialize minStockLevel
 
   useEffect(() => {
     fetchProducts();
@@ -31,7 +32,7 @@ const Products = () => {
 
   const handleCreate = () => {
     setEditingProduct(null);
-    setFormData({ name: '', sku: '', category: '', unit: 'pcs' });
+    setFormData({ name: '', sku: '', category: '', unit: 'pcs', minStockLevel: 0 }); // Set minStockLevel for new product
     setIsModalOpen(true);
   };
 
@@ -42,6 +43,7 @@ const Products = () => {
       sku: product.sku || '',
       category: product.category || '',
       unit: product.unit || 'pcs',
+      minStockLevel: product.minStockLevel !== undefined ? product.minStockLevel : 0, // Set minStockLevel for editing
     });
     setIsModalOpen(true);
   };
@@ -80,6 +82,7 @@ const Products = () => {
     { key: 'sku', label: 'SKU', sortable: true },
     { key: 'category', label: 'Category', sortable: true },
     { key: 'unit', label: 'Unit', sortable: true },
+    { key: 'minStockLevel', label: 'Min Stock', sortable: true }, // Add minStockLevel to columns
   ];
 
   if (loading) {
@@ -140,6 +143,13 @@ const Products = () => {
             value={formData.unit}
             onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
             required
+          />
+          <NumberInput // Add NumberInput for minStockLevel
+            label="Minimum Stock Level"
+            name="minStockLevel"
+            value={formData.minStockLevel}
+            onChange={(e) => setFormData({ ...formData, minStockLevel: parseFloat(e.target.value) })}
+            min={0}
           />
           <div className="flex justify-end space-x-3 mt-6">
             <button

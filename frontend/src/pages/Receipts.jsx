@@ -29,7 +29,7 @@ const Receipts = () => {
     receiveFrom: '',
     scheduleDate: '',
     responsible: user?.name || '',
-    lines: [{ productId: '', quantity: 0 }],
+    lines: [{ productId: '', quantity: 0, unitPrice: 0 }],
     notes: '',
   });
 
@@ -76,7 +76,7 @@ const Receipts = () => {
       receiveFrom: '',
       scheduleDate: '',
       responsible: user?.name || '',
-      lines: [{ productId: '', quantity: 0 }],
+      lines: [{ productId: '', quantity: 0, unitPrice: 0 }],
       notes: '',
     });
     setIsModalOpen(true);
@@ -93,7 +93,7 @@ const Receipts = () => {
       receiveFrom: receipt.receiveFrom || '',
       scheduleDate: receipt.scheduleDate || '',
       responsible: receipt.responsible || user?.name || '',
-      lines: receipt.lines || [{ productId: '', quantity: 0 }],
+      lines: receipt.lines || [{ productId: '', quantity: 0, unitPrice: 0 }],
       notes: receipt.notes || '',
     });
     setIsModalOpen(true);
@@ -152,7 +152,7 @@ const Receipts = () => {
   const addLine = () => {
     setFormData({
       ...formData,
-      lines: [...formData.lines, { productId: '', quantity: 0 }],
+      lines: [...formData.lines, { productId: '', quantity: 0, unitPrice: 0 }],
     });
   };
 
@@ -384,6 +384,16 @@ const Receipts = () => {
                       value={line.quantity}
                       onChange={(e) => updateLine(index, 'quantity', parseFloat(e.target.value))}
                       min={0.01}
+                      step={0.01}
+                    />
+                  </div>
+                  <div className="w-32">
+                    <NumberInput
+                      name={`unitPrice-${index}`}
+                      label="Unit Price"
+                      value={line.unitPrice}
+                      onChange={(e) => updateLine(index, 'unitPrice', parseFloat(e.target.value))}
+                      min={0}
                       step={0.01}
                     />
                   </div>

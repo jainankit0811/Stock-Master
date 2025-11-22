@@ -18,6 +18,7 @@ const Sidebar = () => {
     { path: '/adjustments', label: 'Stock Adjustments', icon: '⚖️' },
     { path: '/move-history', label: 'Move History', icon: '🕐' },
     { path: '/ledger', label: 'Ledger', icon: '📖' },
+    { path: '/stock-alerts', label: 'Stock Alerts', icon: '🔔' }, // New line for Stock Alerts
     { path: '/settings', label: 'Settings', icon: '⚙️' },
   ];
 

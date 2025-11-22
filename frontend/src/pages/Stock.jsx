@@ -13,8 +13,15 @@ const Stock = () => {
   const [editingCell, setEditingCell] = useState(null);
 
   useEffect(() => {
-    fetchWarehouses();
-    fetchProducts();
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([fetchWarehouses(), fetchProducts()]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {

@@ -18,7 +18,8 @@ router.use(verifyToken);
 const productValidation = [
   body('name').trim().notEmpty().withMessage('Product name is required'),
   body('sku').trim().notEmpty().withMessage('SKU is required'),
-  body('unit').optional().trim().notEmpty()
+  body('unit').optional().trim().notEmpty(),
+  body('minStockLevel').optional().isFloat({ min: 0 }).withMessage('Minimum stock level must be a non-negative number')
 ];
 
 // Routes

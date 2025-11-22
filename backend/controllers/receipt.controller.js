@@ -7,8 +7,8 @@ const mongoose = require('mongoose');
 /**
  * Generate receipt number
  */
-const generateReceiptNumber = async () => {
-  const count = await Receipt.countDocuments();
+const generateReceiptNumber = async (session) => {
+  const count = await Receipt.countDocuments({}, { session });
   return `REC-${String(count + 1).padStart(6, '0')}`;
 };
 
@@ -21,10 +21,10 @@ const createReceipt = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { warehouseId, lines, notes } = req.body;
+    const { warehouseId, lines, notes, receiveFrom, scheduleDate, responsible } = req.body;
 
     // Validate warehouse exists
-    const warehouse = await Warehouse.findById(warehouseId);
+    const warehouse = await Warehouse.findById(warehouseId).session(session);
     if (!warehouse) {
       await session.abortTransaction();
       return res.status(404).json({
@@ -35,7 +35,7 @@ const createReceipt = async (req, res) => {
 
     // Validate products exist
     for (const line of lines) {
-      const product = await Product.findById(line.productId);
+      const product = await Product.findById(line.productId).session(session);
       if (!product) {
         await session.abortTransaction();
         return res.status(404).json({
@@ -46,21 +46,26 @@ const createReceipt = async (req, res) => {
     }
 
     // Generate receipt number
-    const receiptNumber = await generateReceiptNumber();
+    const receiptNumber = await generateReceiptNumber(session);
 
     // Create receipt
-    const receipt = await Receipt.create([{
+    const newReceipt = new Receipt({
       receiptNumber,
       warehouseId,
       lines,
       notes,
+      receiveFrom,
+      scheduleDate,
+      responsible,
       status: 'Draft',
       createdBy: req.user._id
-    }], { session });
-
+    });
+		
+    const receipt = await newReceipt.save({ session });
+    
     await session.commitTransaction();
 
-    const populatedReceipt = await Receipt.findById(receipt[0]._id)
+    const populatedReceipt = await Receipt.findById(receipt._id)
       .populate('warehouseId', 'name code')
       .populate('lines.productId', 'name sku')
       .populate('createdBy', 'name email');
@@ -71,6 +76,7 @@ const createReceipt = async (req, res) => {
       data: { receipt: populatedReceipt }
     });
   } catch (error) {
+    console.error('Error creating receipt:', error);
     await session.abortTransaction();
     res.status(500).json({
       success: false,
@@ -237,11 +243,14 @@ const updateReceipt = async (req, res) => {
       });
     }
 
-    const { warehouseId, lines, notes } = req.body;
+    const { warehouseId, lines, notes, receiveFrom, scheduleDate, responsible } = req.body;
 
     if (warehouseId) receipt.warehouseId = warehouseId;
     if (lines) receipt.lines = lines;
     if (notes !== undefined) receipt.notes = notes;
+    if (receiveFrom) receipt.receiveFrom = receiveFrom;
+    if (scheduleDate) receipt.scheduleDate = scheduleDate;
+    if (responsible) receipt.responsible = responsible;
 
     await receipt.save();
 

@@ -19,6 +19,7 @@ import Adjustments from './pages/Adjustments';
 import MoveHistory from './pages/MoveHistory';
 import Ledger from './pages/Ledger';
 import Settings from './pages/Settings';
+import StockAlerts from './pages/StockAlerts'; // Import StockAlerts
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -106,6 +107,7 @@ function App() {
             <Route path="adjustments" element={<Adjustments />} />
             <Route path="move-history" element={<MoveHistory />} />
             <Route path="ledger" element={<Ledger />} />
+            <Route path="stock-alerts" element={<StockAlerts />} /> {/* New route for Stock Alerts */}
             <Route path="settings" element={<Settings />} />
           </Route>
 

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Product = require('../models/Product.model');
 
 /**
@@ -6,7 +7,7 @@ const Product = require('../models/Product.model');
  */
 const createProduct = async (req, res) => {
   try {
-    const { name, sku, category, unit } = req.body;
+    const { name, sku, category, unit, minStockLevel } = req.body;
 
     // Check if SKU already exists
     const existingProduct = await Product.findOne({ sku: sku.toUpperCase() });
@@ -21,7 +22,8 @@ const createProduct = async (req, res) => {
       name,
       sku: sku.toUpperCase(),
       category,
-      unit: unit || 'pcs'
+      unit: unit || 'pcs',
+      minStockLevel: minStockLevel !== undefined ? minStockLevel : 0
     });
 
     res.status(201).json({
@@ -44,35 +46,60 @@ const createProduct = async (req, res) => {
 const getProducts = async (req, res) => {
   try {
     const { sku, category, lowStock, warehouseId } = req.query;
-    const query = {};
+    let query = {};
 
     if (sku) {
       query.sku = { $regex: sku.toUpperCase(), $options: 'i' };
     }
-
     if (category) {
       query.category = { $regex: category, $options: 'i' };
     }
+    
+    let products;
 
-    const products = await Product.find(query).sort({ createdAt: -1 });
-
-    // If lowStock filter is requested, we need to check StockBalance
-    let filteredProducts = products;
     if (lowStock === 'true' && warehouseId) {
       const StockBalance = require('../models/StockBalance.model');
-      const balances = await StockBalance.find({
-        warehouseId,
-        quantity: { $lte: 10 } // Consider low stock as <= 10
-      }).populate('productId');
-
-      const lowStockProductIds = balances.map(b => b.productId._id.toString());
-      filteredProducts = products.filter(p => lowStockProductIds.includes(p._id.toString()));
+      
+      products = await Product.aggregate([
+        { $match: query },
+        {
+          $lookup: {
+            from: StockBalance.collection.name,
+            let: { productId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$productId', '$$productId'] },
+                      { $eq: ['$warehouseId', mongoose.Types.ObjectId(warehouseId)] }
+                    ]
+                  }
+                }
+              }
+            ],
+            as: 'stock'
+          }
+        },
+        { $unwind: '$stock' },
+        {
+          $redact: {
+            $cond: {
+              if: { $lte: ['$stock.quantity', '$minStockLevel'] },
+              then: '$$KEEP',
+              else: '$$PRUNE'
+            }
+          }
+        }
+      ]);
+    } else {
+      products = await Product.find(query).sort({ createdAt: -1 });
     }
 
     res.json({
       success: true,
-      count: filteredProducts.length,
-      data: { products: filteredProducts }
+      count: products.length,
+      data: { products: products }
     });
   } catch (error) {
     res.status(500).json({
@@ -115,13 +142,14 @@ const getProduct = async (req, res) => {
  */
 const updateProduct = async (req, res) => {
   try {
-    const { name, sku, category, unit } = req.body;
+    const { name, sku, category, unit, minStockLevel } = req.body;
     const updateData = {};
 
     if (name) updateData.name = name;
     if (sku) updateData.sku = sku.toUpperCase();
     if (category !== undefined) updateData.category = category;
     if (unit) updateData.unit = unit;
+    if (minStockLevel !== undefined) updateData.minStockLevel = minStockLevel;
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
