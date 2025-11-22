@@ -34,3 +34,4 @@ export const deleteWarehouse = async (id) => {
   return response.data;
 };
 
+

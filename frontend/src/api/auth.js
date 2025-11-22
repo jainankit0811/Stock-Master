@@ -22,3 +22,16 @@ export const getMe = async () => {
   return response.data;
 };
 
+// Forgot password - request reset token
+export const forgotPassword = async (emailData) => {
+  const response = await axiosInstance.post('/api/auth/forgot-password', emailData);
+  return response.data;
+};
+
+// Reset password with token
+export const resetPassword = async (resetData) => {
+  const response = await axiosInstance.post('/api/auth/reset-password', resetData);
+  return response.data;
+};
+
+

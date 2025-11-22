@@ -7,6 +7,7 @@ A comprehensive inventory management system backend built with Node.js, Express,
 - **Authentication & Authorization**
   - User registration and login with JWT tokens
   - Password hashing using bcrypt
+  - OTP-based password reset via email
   - Role-based access control (Manager, Staff)
   - Protected routes with JWT middleware
 
@@ -59,7 +60,22 @@ A comprehensive inventory management system backend built with Node.js, Express,
    MONGO_URI=mongodb://localhost:27017/inventory-os
    JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
    PORT=5000
+   
+   # Email Configuration (for OTP password reset)
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_SECURE=false
+   EMAIL_USER=your-email@gmail.com
+   EMAIL_PASS=your-app-password
+   EMAIL_FROM_NAME=Inventory OS
    ```
+   
+   **Email Setup Instructions:**
+   - **Gmail**: Enable 2-factor authentication and generate an "App Password" at https://myaccount.google.com/apppasswords
+   - **Outlook**: Use `smtp-mail.outlook.com` with port `587`
+   - **Yahoo**: Use `smtp.mail.yahoo.com` with port `587`
+   - **Custom SMTP**: Use your provider's SMTP settings
+   - If email is not configured, OTP will be logged to console in development mode
 
 4. **Start MongoDB** (if running locally)
    ```bash

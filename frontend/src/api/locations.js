@@ -36,3 +36,4 @@ export const deleteLocation = async (id) => {
   return response.data;
 };
 
+

@@ -24,3 +24,4 @@ const TextInput = ({ label, name, value, onChange, error, type = 'text', placeho
 
 export default TextInput;
 
+

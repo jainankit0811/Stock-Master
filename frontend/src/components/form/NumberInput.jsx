@@ -27,3 +27,4 @@ const NumberInput = ({ label, name, value, onChange, error, placeholder, min, ma
 
 export default NumberInput;
 
+

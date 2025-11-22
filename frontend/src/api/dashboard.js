@@ -10,3 +10,10 @@ export const getDashboardKPIs = async () => {
   return response.data;
 };
 
+// Get inventory operations with filters
+export const getInventoryOperations = async (params = {}) => {
+  const response = await axiosInstance.get('/api/dashboard/operations', { params });
+  return response.data;
+};
+
+

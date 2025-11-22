@@ -30,3 +30,4 @@ const KPICard = ({ title, value, icon, trend, trendValue, color = 'blue' }) => {
 
 export default KPICard;
 
+

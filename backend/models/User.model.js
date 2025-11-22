@@ -24,6 +24,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['manager', 'staff'],
     default: 'staff'
+  },
+  resetOTP: {
+    type: String,
+    default: null
+  },
+  resetOTPExpiry: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true

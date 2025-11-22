@@ -40,3 +40,4 @@ export const deleteReceipt = async (id) => {
   return response.data;
 };
 
+

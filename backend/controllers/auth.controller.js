@@ -1,5 +1,7 @@
 const User = require('../models/User.model');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { sendOTPEmail } = require('../services/emailService');
 
 /**
  * Generate JWT token
@@ -128,9 +130,134 @@ const getMe = async (req, res) => {
   }
 };
 
+/**
+ * Forgot password - generate OTP
+ * POST /api/auth/forgot-password
+ */
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return res.json({
+        success: true,
+        message: 'If an account exists with this email, an OTP has been sent'
+      });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = Date.now() + 600000; // 10 minutes from now
+
+    // Save OTP to user
+    user.resetOTP = otp;
+    user.resetOTPExpiry = new Date(otpExpiry);
+    await user.save();
+
+    // Send OTP via email
+    try {
+      await sendOTPEmail(user.email, otp, user.name);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      // Still return success to user (security: don't reveal if email failed)
+      // Log the error for admin review
+    }
+
+    // Return success message (never return OTP in response for security)
+    res.json({
+      success: true,
+      message: 'If an account exists with this email, an OTP has been sent'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error processing forgot password request'
+    });
+  }
+};
+
+/**
+ * Reset password with OTP
+ * POST /api/auth/reset-password
+ */
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, password } = req.body;
+
+    if (!email || !otp || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email, OTP, and password are required'
+      });
+    }
+
+    // Find user by email and verify OTP
+    const user = await User.findOne({
+      email,
+      resetOTP: otp,
+      resetOTPExpiry: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired OTP'
+      });
+    }
+
+    // Validate password
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters'
+      });
+    }
+
+    // Update password
+    user.hashedPassword = password; // Will be hashed by pre-save hook
+    user.resetOTP = null;
+    user.resetOTPExpiry = null;
+    await user.save();
+
+    // Generate token for automatic login
+    const token = generateToken(user._id);
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        },
+        token
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error resetting password'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
-  getMe
+  getMe,
+  forgotPassword,
+  resetPassword
 };
 

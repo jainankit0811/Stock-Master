@@ -34,3 +34,4 @@ export const deleteProduct = async (id) => {
   return response.data;
 };
 
+
